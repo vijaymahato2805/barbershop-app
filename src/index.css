@@ -1,0 +1,114 @@
+/* index.css */
+
+/*
+  1. Use Tailwind's directives to import its base, components, and utilities.
+*/
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/*
+  2. Define custom CSS variables for your Indian color palette.
+*/
+:root {
+  --color-saffron: #FF9933;
+  --color-saffron-light: #FFB366;
+  --color-deep-green: #006400;
+  --color-black: #000000;
+  --color-white: #ffffff;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+}
+
+/*
+  3. Apply a base font and color to the body.
+*/
+body {
+  font-family: 'Inter', sans-serif;
+  color: var(--color-black);
+  background-color: var(--color-white);
+  line-height: 1.5;
+}
+
+/*
+  4. Add some common utility classes for your project.
+*/
+.text-saffron {
+  color: var(--color-saffron);
+}
+
+.bg-deep-green {
+  background-color: var(--color-deep-green);
+}
+
+.text-deep-green {
+  color: var(--color-deep-green);
+}
+
+/*
+  5. Add animation keyframes and classes.
+*/
+
+/* Fade-in animation for components */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out forwards;
+}
+
+/* Button press animation for user feedback */
+@keyframes buttonPress {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.98);
+  }
+}
+
+.animate-button-press:active {
+  animation: buttonPress 0.2s ease-in-out forwards;
+}
+
+/* Spinner animation for loading states */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border-left-color: var(--color-deep-green);
+}
+
+/*
+  6. Add other global styles like container.
+*/
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
