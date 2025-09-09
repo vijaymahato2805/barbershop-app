@@ -20,6 +20,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src", "vite.config.ts", "jest.config.js"],
+  "include": ["src", "vite.config.ts", "jest.config.js", "tailwind.config.js", "public/tailwind.config.js"],
   "exclude": ["node_modules", "dist"],
 }
