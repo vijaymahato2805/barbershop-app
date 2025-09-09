@@ -3,9 +3,10 @@
 /*
   1. Use Tailwind's directives to import its base, components, and utilities.
 */
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 
 /*
   2. Define custom CSS variables for your Indian color palette.
