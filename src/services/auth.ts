@@ -1,6 +1,12 @@
 // src/services/auth.ts
-import { getAuth, signInWithPhoneNumber, RecaptchaVerifier } from "firebase/auth";
-import { app } from '../firebase'; // Import the initialized app instance
+import { 
+  getAuth, 
+  signInWithPhoneNumber, 
+  RecaptchaVerifier, 
+  signOut, 
+  User 
+} from "firebase/auth";
+import { app } from "../firebase";
 
 // Extend the Window interface to include recaptchaVerifier
 declare global {
@@ -9,27 +15,50 @@ declare global {
   }
 }
 
-// Get the Authentication service instance for the app
 export const auth = getAuth(app);
 
-// This function creates a RecaptchaVerifier, which is needed for phone number sign-in
-export const setupRecaptcha = (containerId: string) => {
+// ✅ Setup Recaptcha
+export const setupRecaptcha = (containerId: string, size: "invisible" | "normal" = "invisible") => {
   window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
-    size: 'invisible',
+    size,
     callback: (response: any) => {
-      // reCAPTCHA solved, allows you to proceed with sign-in
+      // reCAPTCHA solved, proceed with sign-in
+      console.log("reCAPTCHA verified:", response);
     },
   });
 };
 
-// This function handles sending the OTP
+// ✅ Send OTP
 export const sendOTP = async (phoneNumber: string) => {
   const recaptchaVerifier = window.recaptchaVerifier;
+  if (!recaptchaVerifier) throw new Error("Recaptcha not set up");
+
   const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
-  return confirmationResult;
+  return confirmationResult; // Save this for verifyOTP
 };
 
-// This function handles OTP verification
+// ✅ Verify OTP
 export const verifyOTP = async (confirmationResult: any, otp: string) => {
-  await confirmationResult.confirm(otp);
+  const result = await confirmationResult.confirm(otp);
+  const user: User = result.user;
+
+  // Save to localStorage so AuthGuard can detect login
+  localStorage.setItem("user", JSON.stringify({
+    uid: user.uid,
+    phoneNumber: user.phoneNumber,
+  }));
+
+  return user;
+};
+
+// ✅ Logout
+export const logout = async () => {
+  await signOut(auth);
+  localStorage.removeItem("user");
+};
+
+// ✅ Get current user
+export const getCurrentUser = () => {
+  const user = localStorage.getItem("user");
+  return user ? JSON.parse(user) : null;
 };
