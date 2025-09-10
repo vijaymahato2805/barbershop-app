@@ -1,10 +1,12 @@
+// src/pages/BookingPage.tsx
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
-import { createBooking } from "../services/bookingService";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
 const BookingPage: React.FC = () => {
   const { salonId } = useParams<{ salonId: string }>();
+  const navigate = useNavigate();
+
   const [service, setService] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
@@ -17,23 +19,37 @@ const BookingPage: React.FC = () => {
     setMessage("");
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const userString = localStorage.getItem("user");
+      const user = userString ? JSON.parse(userString) : null;
+
       if (!user) {
         setMessage("You must be logged in to book.");
+        setLoading(false);
         return;
       }
 
-      const booking = await createBooking({
-        salonId: salonId!,
-        userId: user.id,
-        service,
-        date,
-        time,
-      });
+      const { data, error } = await supabase.from("bookings").insert([
+        {
+          user_id: user.id,
+          salon_id: salonId,
+          service,
+          date,
+          time,
+          status: "pending", // default status
+        },
+      ]);
 
-      setMessage(`Booking confirmed! ID: ${booking.booking_id}`);
-    } catch (error: any) {
-      setMessage(error.message || "Failed to create booking.");
+      if (error) {
+        console.error("Booking error:", error);
+        setMessage("Failed to create booking. Please try again.");
+      } else {
+        setMessage("Booking confirmed successfully!");
+        // Redirect to MyBookings page after short delay
+        setTimeout(() => navigate("/my-bookings"), 1000);
+      }
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      setMessage("Something went wrong.");
     } finally {
       setLoading(false);
     }
@@ -43,45 +59,73 @@ const BookingPage: React.FC = () => {
     <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
       <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-lg">
         <h1 className="text-2xl font-bold mb-4">Book Your Service</h1>
-        <p className="text-gray-600 mb-6">Salon ID: {salonId}</p>
+        <p className="text-gray-600 mb-6">Booking for Salon ID: {salonId}</p>
 
         <form onSubmit={handleBooking} className="space-y-4">
-          <select
-            value={service}
-            onChange={(e) => setService(e.target.value)}
-            required
-            className="w-full border rounded-md p-2"
-          >
-            <option value="">Select a Service</option>
-            <option value="Haircut">Haircut</option>
-            <option value="Beard Trim">Beard Trim</option>
-          </select>
+          <div>
+            <label
+              htmlFor="service"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Service
+            </label>
+            <select
+              id="service"
+              value={service}
+              onChange={(e) => setService(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              required
+            >
+              <option value="">Select a Service</option>
+              <option value="Haircut">Haircut</option>
+              <option value="Beard Trim">Beard Trim</option>
+              <option value="Shaving">Shaving</option>
+              <option value="Hair Spa">Hair Spa</option>
+            </select>
+          </div>
 
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            required
-            className="w-full border rounded-md p-2"
-          />
+          <div>
+            <label
+              htmlFor="date"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Date
+            </label>
+            <input
+              type="date"
+              id="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              required
+            />
+          </div>
 
-          <input
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            required
-            className="w-full border rounded-md p-2"
-          />
+          <div>
+            <label
+              htmlFor="time"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Time
+            </label>
+            <input
+              type="time"
+              id="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              required
+            />
+          </div>
 
           <button
             type="submit"
+            className="w-full bg-deep-green text-white py-2 px-4 rounded-md font-semibold hover:bg-opacity-90 transition-colors"
             disabled={loading}
-            className="w-full bg-deep-green text-white py-2 rounded-md"
           >
             {loading ? "Booking..." : "Confirm Booking"}
           </button>
         </form>
-
         {message && (
           <p className="mt-4 text-center text-sm font-medium">{message}</p>
         )}
