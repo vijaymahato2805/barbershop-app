@@ -1,17 +1,30 @@
 // src/pages/BookingPage.tsx
-import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { createBooking, fetchSalons } from "../services/api";
 
 const BookingPage: React.FC = () => {
   const { salonId } = useParams<{ salonId: string }>();
-  const navigate = useNavigate();
-
-  const [service, setService] = useState("");
+  const [salon, setSalon] = useState<any>(null);
+  const [serviceId, setServiceId] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  // ✅ Load salon + services
+  useEffect(() => {
+    const loadSalon = async () => {
+      try {
+        const salons = await fetchSalons();
+        const found = salons.find((s: any) => s.id === salonId);
+        setSalon(found);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    loadSalon();
+  }, [salonId]);
 
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,77 +36,65 @@ const BookingPage: React.FC = () => {
       const user = userString ? JSON.parse(userString) : null;
 
       if (!user) {
-        setMessage("You must be logged in to book.");
-        setLoading(false);
+        setMessage("Please log in to book.");
         return;
       }
 
-      const { data, error } = await supabase.from("bookings").insert([
-        {
-          user_id: user.id,
-          salon_id: salonId,
-          service,
-          date,
-          time,
-          status: "pending", // default status
-        },
-      ]);
+      await createBooking({
+        salonId: salonId!,
+        serviceId,
+        date,
+        time,
+        userId: user.id,
+      });
 
-      if (error) {
-        console.error("Booking error:", error);
-        setMessage("Failed to create booking. Please try again.");
-      } else {
-        setMessage("Booking confirmed successfully!");
-        // Redirect to MyBookings page after short delay
-        setTimeout(() => navigate("/my-bookings"), 1000);
-      }
+      setMessage("🎉 Booking confirmed successfully!");
     } catch (error) {
-      console.error("Unexpected error:", error);
-      setMessage("Something went wrong.");
+      console.error(error);
+      setMessage("❌ Failed to create booking. Try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  if (!salon) {
+    return <p className="p-6 text-gray-500">Loading salon details...</p>;
+  }
+
   return (
     <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
       <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-lg">
-        <h1 className="text-2xl font-bold mb-4">Book Your Service</h1>
-        <p className="text-gray-600 mb-6">Booking for Salon ID: {salonId}</p>
+        <h1 className="text-2xl font-bold mb-4">{salon.name}</h1>
+        <p className="text-gray-600 mb-6">{salon.description}</p>
 
         <form onSubmit={handleBooking} className="space-y-4">
+          {/* Service dropdown */}
           <div>
-            <label
-              htmlFor="service"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label className="block text-sm font-medium text-gray-700">
               Service
             </label>
             <select
-              id="service"
-              value={service}
-              onChange={(e) => setService(e.target.value)}
+              value={serviceId}
+              onChange={(e) => setServiceId(e.target.value)}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
               required
             >
               <option value="">Select a Service</option>
-              <option value="Haircut">Haircut</option>
-              <option value="Beard Trim">Beard Trim</option>
-              <option value="Shaving">Shaving</option>
-              <option value="Hair Spa">Hair Spa</option>
+              {salon.services?.map((srv: any) => (
+                <option key={srv.id} value={srv.id}>
+                  {srv.name} – ₹{srv.price} ({srv.duration_minutes} min)
+                </option>
+              ))}
             </select>
           </div>
 
+          {/* Date */}
           <div>
-            <label
-              htmlFor="date"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label className="block text-sm font-medium text-gray-700">
               Date
             </label>
             <input
               type="date"
-              id="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
@@ -101,16 +102,13 @@ const BookingPage: React.FC = () => {
             />
           </div>
 
+          {/* Time */}
           <div>
-            <label
-              htmlFor="time"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label className="block text-sm font-medium text-gray-700">
               Time
             </label>
             <input
               type="time"
-              id="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
@@ -118,6 +116,7 @@ const BookingPage: React.FC = () => {
             />
           </div>
 
+          {/* Submit */}
           <button
             type="submit"
             className="w-full bg-deep-green text-white py-2 px-4 rounded-md font-semibold hover:bg-opacity-90 transition-colors"
@@ -126,6 +125,7 @@ const BookingPage: React.FC = () => {
             {loading ? "Booking..." : "Confirm Booking"}
           </button>
         </form>
+
         {message && (
           <p className="mt-4 text-center text-sm font-medium">{message}</p>
         )}
