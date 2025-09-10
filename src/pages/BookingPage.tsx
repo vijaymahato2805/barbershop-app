@@ -1,37 +1,46 @@
 // src/pages/BookingPage.tsx
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { createBooking } from '../services/api';
+import React, { useState } from "react";
+import { useParams } from "react-router-dom";
+import { createBooking } from "../services/api";
 
 const BookingPage: React.FC = () => {
   const { salonId } = useParams<{ salonId: string }>();
-  const [service, setService] = useState('');
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
+  const [service, setService] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
 
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage('');
+    setMessage("");
 
     try {
-      // Dummy data for now, will be replaced with form values
-      const userString = localStorage.getItem('user');
+      // Get user from localStorage (set during OTP login)
+      const userString = localStorage.getItem("user");
       const user = userString ? JSON.parse(userString) : null;
+
+      if (!user) {
+        setMessage("You must be logged in to make a booking.");
+        setLoading(false);
+        return;
+      }
+
       const bookingDetails = {
         salonId,
         service,
         date,
         time,
-        userId: user ? user.id : null,
+        userId: user.uid, // Firebase UID
+        phoneNumber: user.phoneNumber || null, // optional extra
       };
 
       await createBooking(bookingDetails);
-      setMessage('Booking confirmed successfully!');
+      setMessage("✅ Booking confirmed successfully!");
     } catch (error) {
-      setMessage('Failed to create booking. Please try again.');
+      console.error(error);
+      setMessage("❌ Failed to create booking. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -45,8 +54,13 @@ const BookingPage: React.FC = () => {
 
         <form onSubmit={handleBooking} className="space-y-4">
           <div>
-            <label htmlFor="service" className="block text-sm font-medium text-gray-700">Service</label>
-            <select 
+            <label
+              htmlFor="service"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Service
+            </label>
+            <select
               id="service"
               value={service}
               onChange={(e) => setService(e.target.value)}
@@ -60,7 +74,12 @@ const BookingPage: React.FC = () => {
           </div>
 
           <div>
-            <label htmlFor="date" className="block text-sm font-medium text-gray-700">Date</label>
+            <label
+              htmlFor="date"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Date
+            </label>
             <input
               type="date"
               id="date"
@@ -72,7 +91,12 @@ const BookingPage: React.FC = () => {
           </div>
 
           <div>
-            <label htmlFor="time" className="block text-sm font-medium text-gray-700">Time</label>
+            <label
+              htmlFor="time"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Time
+            </label>
             <input
               type="time"
               id="time"
@@ -85,13 +109,16 @@ const BookingPage: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full bg-deep-green text-white py-2 px-4 rounded-md font-semibold hover:bg-opacity-90 transition-colors"
+            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-opacity-90 transition-colors"
             disabled={loading}
           >
-            {loading ? 'Booking...' : 'Confirm Booking'}
+            {loading ? "Booking..." : "Confirm Booking"}
           </button>
         </form>
-        {message && <p className="mt-4 text-center text-sm font-medium">{message}</p>}
+
+        {message && (
+          <p className="mt-4 text-center text-sm font-medium">{message}</p>
+        )}
       </div>
     </div>
   );
