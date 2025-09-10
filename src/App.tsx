@@ -4,7 +4,7 @@ import Home from "./pages/HomePage";
 import SalonDetail from "./pages/SalonDetailPage";
 import Login from "./pages/LoginPage";
 import Booking from "./pages/BookingPage";
-import MyBookingsPage from "./pages/MyBookingsPage"; // 👈 import it
+import MyBookingsPage from "./pages/mybookingspage";// 👈 import it
 import AuthGuard from "./components/AuthGuard";
 
 function App() {
