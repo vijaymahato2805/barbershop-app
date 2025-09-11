@@ -1,96 +1,152 @@
-// src/pages/HomePage.tsx
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { fetchSalons } from "../services/api";
+// src/pages/LoginPage.tsx
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus } from "lucide-react"; // ✅ nice icon
+import { auth, sendOTP, verifyOTP, setupRecaptcha } from "../services/auth";
 
-type Salon = {
-  id: string;
-  name: string;
-  address: string;
-  description?: string;
-  image_url?: string;
-  rating?: number;
-  reviews?: number;
-};
-
-const HomePage: React.FC = () => {
-  const [salons, setSalons] = useState<Salon[]>([]);
-  const [loading, setLoading] = useState(true);
+const LoginPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
 
   useEffect(() => {
-    const loadSalons = async () => {
-      try {
-        const data = await fetchSalons();
-        setSalons(data);
-      } catch (error) {
-        console.error("Error loading salons:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadSalons();
+    setupRecaptcha("recaptcha-container");
   }, []);
 
-  if (loading) {
-    return <p className="p-6 text-gray-500">Loading salons...</p>;
-  }
+  // ✅ Send OTP
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      const result = await sendOTP(phoneNumber);
+      setConfirmationResult(result);
+      setOtpSent(true);
+    } catch (err) {
+      console.error(err);
+      setError("❌ Failed to send OTP. Please check your phone number.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Verify OTP
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      await verifyOTP(confirmationResult, otp);
+
+      const user = auth.currentUser;
+      if (user) {
+        const idToken = await user.getIdToken();
+        localStorage.setItem("authToken", idToken);
+        localStorage.setItem(
+          "user",
+          JSON.stringify({ uid: user.uid, phoneNumber: user.phoneNumber })
+        );
+        navigate("/");
+      } else {
+        setError("Login failed. No user found.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("❌ Invalid OTP. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="p-4 md:p-8 bg-gray-50 min-h-screen relative">
-      <h1 className="text-2xl font-bold mb-6">Nearby Salons</h1>
-
-      {salons.length === 0 ? (
-        <p className="text-gray-500">No salons available.</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {salons.map((salon) => (
-            <motion.div
-              key={salon.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all"
-              whileHover={{ scale: 1.02 }}
-            >
-              <img
-                src={salon.image_url || "https://via.placeholder.com/400x250"}
-                alt={salon.name}
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-4">
-                <h2 className="text-lg font-semibold">{salon.name}</h2>
-                <p className="text-sm text-gray-600 mb-2">{salon.address}</p>
-                <p className="text-yellow-600 font-medium">
-                  ⭐ {salon.rating || "N/A"} ({salon.reviews || 0} reviews)
-                </p>
-
-                <Link
-                  to={`/salons/${salon.id}`}
-                  className="mt-4 inline-block w-full bg-deep-green text-white text-center py-2 px-4 rounded-md hover:bg-opacity-90 transition-colors"
-                >
-                  View Details
-                </Link>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      )}
-
-      {/* ✅ Floating Add Salon Button */}
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-100 via-white to-green-50">
       <motion.div
-        className="fixed bottom-8 right-8"
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8"
       >
-        <Link
-          to="/new-salon"
-          className="flex items-center justify-center w-14 h-14 rounded-full bg-deep-green text-white shadow-xl hover:bg-opacity-90 transition"
-        >
-          <Plus size={28} />
-        </Link>
+        <h2 className="text-2xl font-bold text-center text-deep-green mb-6">
+          {otpSent ? "Enter OTP 🔑" : "Login with Phone 📱"}
+        </h2>
+
+        {!otpSent ? (
+          <form onSubmit={handleSendOtp} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className="mt-1 w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-deep-green"
+                placeholder="+919876543210"
+                required
+              />
+            </div>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            <button
+              type="submit"
+              className="w-full bg-deep-green text-white py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-all"
+              disabled={loading}
+            >
+              {loading ? "Sending OTP..." : "Send OTP"}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Enter OTP
+              </label>
+              <input
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                className="mt-1 w-full border border-gray-300 rounded-lg p-3 text-center tracking-widest focus:ring-2 focus:ring-deep-green"
+                placeholder="••••••"
+                maxLength={6}
+                required
+              />
+            </div>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            <button
+              type="submit"
+              className="w-full bg-deep-green text-white py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-all"
+              disabled={loading}
+            >
+              {loading ? "Verifying..." : "Verify & Login"}
+            </button>
+          </form>
+        )}
+
+        {/* ✅ Extra Links */}
+        <p className="mt-6 text-center text-sm text-gray-600">
+          Not a member yet?{" "}
+          <a
+            href="/register"
+            className="text-deep-green font-semibold hover:underline"
+          >
+            Register as Salon Owner
+          </a>
+        </p>
+
+        <p className="mt-2 text-center text-sm text-gray-500">
+          <a href="/" className="hover:underline">
+            ← Back to Home
+          </a>
+        </p>
       </motion.div>
+
+      {/* Invisible reCAPTCHA */}
+      <div id="recaptcha-container"></div>
     </div>
   );
 };
 
-export default HomePage;
+export default LoginPage;
