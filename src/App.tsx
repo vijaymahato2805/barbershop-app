@@ -5,10 +5,11 @@ import SalonDetail from "./pages/SalonDetailPage";
 import Login from "./pages/LoginPage";
 import BookingPage from "./pages/BookingPage";
 import MyBookingsPage from "./pages/BookingsPage"; // ✅ new file
+import RegisterPage from "./pages/RegisterPage";
 import NewSalonPage from "./pages/NewSalonPage";
 import AuthGuard from "./components/AuthGuard";
 import AuthGuard from "./components/FloatingButton";
-
+ 
 function App() {
   return (
     <Router>
@@ -19,6 +20,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/salons/:id" element={<SalonDetail />} />
           <Route path="/new-salon" element={<NewSalonPage />} />
+           <Route path="/register" element={<RegisterPage />} /> 
 
           {/* Protected routes */}
           <Route
