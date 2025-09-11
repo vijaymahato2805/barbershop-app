@@ -98,6 +98,16 @@ const LoginPage: React.FC = () => {
               {loading ? "Sending OTP..." : "Send OTP"}
             </button>
           </form>
+        {/* ✅ Add register link below forms */}
+ <p className="mt-6 text-center text-sm text-gray-600">
+  Not a member yet?{" "}
+  <a
+    href="/register"
+    className="text-deep-green font-semibold hover:underline"
+  >
+    Register as Salon Owner
+  </a>
+</p>
         ) : (
           <form onSubmit={handleVerifyOtp} className="space-y-4">
             <div>
@@ -125,6 +135,7 @@ const LoginPage: React.FC = () => {
           </form>
         )}
       </motion.div>
+      
 
       {/* Invisible reCAPTCHA */}
       <div id="recaptcha-container"></div>
