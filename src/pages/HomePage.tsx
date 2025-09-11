@@ -3,8 +3,18 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchSalons } from "../services/api";
 
+type Salon = {
+  id: string;
+  name: string;
+  address: string;
+  description?: string;
+  image_url?: string;
+  rating?: number;
+  reviews?: number;
+};
+
 const HomePage: React.FC = () => {
-  const [salons, setSalons] = useState<any[]>([]);
+  const [salons, setSalons] = useState<Salon[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -51,11 +61,12 @@ const HomePage: React.FC = () => {
                   ⭐ {salon.rating || "N/A"} ({salon.reviews || 0} reviews)
                 </p>
 
+                {/* ✅ Instead of going directly to booking, go to Salon Detail */}
                 <Link
-                  to={`/booking/${salon.id}`}
+                  to={`/salon/${salon.id}`}
                   className="mt-4 inline-block w-full bg-deep-green text-white text-center py-2 px-4 rounded-md hover:bg-opacity-90 transition-colors"
                 >
-                  Book Now
+                  View Details
                 </Link>
               </div>
             </div>
