@@ -4,7 +4,7 @@ import Home from "./pages/HomePage";
 import SalonDetail from "./pages/SalonDetailPage";
 import Login from "./pages/LoginPage";
 import BookingPage from "./pages/BookingPage";
-import MyBookingsPage from "./pages/MyBookingsPage"; // ✅ new file
+import MyBookingsPage from "./pages/BookingsPage"; // ✅ new file
 import NewSalonPage from "./pages/NewSalonPage";
 import AuthGuard from "./components/AuthGuard";
 
