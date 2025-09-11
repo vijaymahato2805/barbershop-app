@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchSalons } from "../services/api";
+import { motion } from "framer-motion";
+import { Plus } from "lucide-react"; // ✅ nice icon
 
 type Salon = {
   id: string;
@@ -37,7 +39,7 @@ const HomePage: React.FC = () => {
   }
 
   return (
-    <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
+    <div className="p-4 md:p-8 bg-gray-50 min-h-screen relative">
       <h1 className="text-2xl font-bold mb-6">Nearby Salons</h1>
 
       {salons.length === 0 ? (
@@ -45,9 +47,10 @@ const HomePage: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {salons.map((salon) => (
-            <div
+            <motion.div
               key={salon.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all"
+              whileHover={{ scale: 1.02 }}
             >
               <img
                 src={salon.image_url || "https://via.placeholder.com/400x250"}
@@ -61,18 +64,31 @@ const HomePage: React.FC = () => {
                   ⭐ {salon.rating || "N/A"} ({salon.reviews || 0} reviews)
                 </p>
 
-                {/* ✅ Instead of going directly to booking, go to Salon Detail */}
                 <Link
-                  to={`/salon/${salon.id}`}
+                  to={`/salons/${salon.id}`}
                   className="mt-4 inline-block w-full bg-deep-green text-white text-center py-2 px-4 rounded-md hover:bg-opacity-90 transition-colors"
                 >
                   View Details
                 </Link>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       )}
+
+      {/* ✅ Floating Add Salon Button */}
+      <motion.div
+        className="fixed bottom-8 right-8"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+      >
+        <Link
+          to="/new-salon"
+          className="flex items-center justify-center w-14 h-14 rounded-full bg-deep-green text-white shadow-xl hover:bg-opacity-90 transition"
+        >
+          <Plus size={28} />
+        </Link>
+      </motion.div>
     </div>
   );
 };
