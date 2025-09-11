@@ -1,7 +1,7 @@
 // src/pages/SalonDetailPage.tsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getSalonDetail } from "../services/api";
+import { fetchSalonDetail } from "../services/api"; // ✅ Use new API
 
 type Service = {
   id: string;
@@ -13,7 +13,7 @@ type Service = {
 type Salon = {
   id: string;
   name: string;
-  image: string;
+  image_url: string; // ✅ Supabase column name
   address: string;
   description: string;
   services?: Service[];
@@ -33,9 +33,15 @@ const SalonDetailPage: React.FC = () => {
         return;
       }
       setLoading(true);
-      const data = await getSalonDetail(id); // ✅ Real API call (Supabase)
-      setSalon(data);
-      setLoading(false);
+      try {
+        const data = await fetchSalonDetail(id); // ✅ Real API call
+        setSalon(data);
+      } catch (error) {
+        console.error("Failed to fetch salon:", error);
+        setSalon(null);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchSalon();
   }, [id]);
@@ -47,7 +53,7 @@ const SalonDetailPage: React.FC = () => {
     <div className="p-4 md:p-8 bg-gray-50">
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
         <img
-          src={salon.image}
+          src={salon.image_url}
           alt={salon.name}
           className="w-full h-64 object-cover"
         />
@@ -58,27 +64,31 @@ const SalonDetailPage: React.FC = () => {
 
           <h2 className="text-2xl font-semibold mb-4">Services</h2>
           <div className="space-y-4">
-            {salon.services?.map((service) => (
-              <div
-                key={service.id}
-                className="flex items-center justify-between border p-4 rounded-lg shadow-sm"
-              >
-                <div>
-                  <h3 className="text-lg font-medium">{service.name}</h3>
-                  <p className="text-sm text-gray-600">
-                    ₹{service.price} • {service.duration_minutes} min
-                  </p>
-                </div>
-                <button
-                  onClick={() =>
-                    navigate(`/booking/${salon.id}?serviceId=${service.id}`)
-                  }
-                  className="bg-deep-green text-white px-4 py-2 rounded-md font-semibold hover:bg-opacity-90"
+            {salon.services?.length ? (
+              salon.services.map((service) => (
+                <div
+                  key={service.id}
+                  className="flex items-center justify-between border p-4 rounded-lg shadow-sm"
                 >
-                  Book
-                </button>
-              </div>
-            ))}
+                  <div>
+                    <h3 className="text-lg font-medium">{service.name}</h3>
+                    <p className="text-sm text-gray-600">
+                      ₹{service.price} • {service.duration_minutes} min
+                    </p>
+                  </div>
+                  <button
+                    onClick={() =>
+                      navigate(`/booking/${salon.id}?serviceId=${service.id}`)
+                    }
+                    className="bg-deep-green text-white px-4 py-2 rounded-md font-semibold hover:bg-opacity-90"
+                  >
+                    Book
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500">No services available.</p>
+            )}
           </div>
         </div>
       </div>
