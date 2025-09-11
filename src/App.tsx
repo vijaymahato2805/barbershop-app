@@ -7,6 +7,7 @@ import BookingPage from "./pages/BookingPage";
 import MyBookingsPage from "./pages/BookingsPage"; // ✅ new file
 import NewSalonPage from "./pages/NewSalonPage";
 import AuthGuard from "./components/AuthGuard";
+import AuthGuard from "./components/FloatingButton";
 
 function App() {
   return (
