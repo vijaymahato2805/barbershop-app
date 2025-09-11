@@ -1,6 +1,6 @@
 // src/pages/LoginPage.tsx
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { auth, sendOTP, verifyOTP, setupRecaptcha } from "../services/auth";
 
@@ -70,44 +70,47 @@ const LoginPage: React.FC = () => {
         transition={{ duration: 0.6 }}
         className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8"
       >
-        <h2 className="text-2xl font-bold text-center text-deep-green mb-6">
+        <h2 className="text-2xl font-bold text-center text-green-700 mb-6">
           {otpSent ? "Enter OTP 🔑" : "Login with Phone 📱"}
         </h2>
 
         {!otpSent ? (
-          <form onSubmit={handleSendOtp} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                className="mt-1 w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-deep-green"
-                placeholder="+919876543210"
-                required
-              />
-            </div>
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            <button
-              type="submit"
-              className="w-full bg-deep-green text-white py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-all"
-              disabled={loading}
-            >
-              {loading ? "Sending OTP..." : "Send OTP"}
-            </button>
-          </form>
-        {/* ✅ Add register link below forms */}
- <p className="mt-6 text-center text-sm text-gray-600">
-  Not a member yet?{" "}
-  <a
-    href="/register"
-    className="text-deep-green font-semibold hover:underline"
-  >
-    Register as Salon Owner
-  </a>
-</p>
+          <>
+            <form onSubmit={handleSendOtp} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="mt-1 w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-green-600"
+                  placeholder="+919876543210"
+                  required
+                />
+              </div>
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+              <button
+                type="submit"
+                className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-all"
+                disabled={loading}
+              >
+                {loading ? "Sending OTP..." : "Send OTP"}
+              </button>
+            </form>
+
+            {/* ✅ Register link below */}
+            <p className="mt-6 text-center text-sm text-gray-600">
+              Not a member yet?{" "}
+              <Link
+                to="/register"
+                className="text-green-700 font-semibold hover:underline"
+              >
+                Register as Salon Owner
+              </Link>
+            </p>
+          </>
         ) : (
           <form onSubmit={handleVerifyOtp} className="space-y-4">
             <div>
@@ -118,7 +121,7 @@ const LoginPage: React.FC = () => {
                 type="text"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
-                className="mt-1 w-full border border-gray-300 rounded-lg p-3 text-center tracking-widest focus:ring-2 focus:ring-deep-green"
+                className="mt-1 w-full border border-gray-300 rounded-lg p-3 text-center tracking-widest focus:ring-2 focus:ring-green-600"
                 placeholder="••••••"
                 maxLength={6}
                 required
@@ -127,7 +130,7 @@ const LoginPage: React.FC = () => {
             {error && <p className="text-red-500 text-sm">{error}</p>}
             <button
               type="submit"
-              className="w-full bg-deep-green text-white py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-all"
+              className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-all"
               disabled={loading}
             >
               {loading ? "Verifying..." : "Verify & Login"}
@@ -135,7 +138,6 @@ const LoginPage: React.FC = () => {
           </form>
         )}
       </motion.div>
-      
 
       {/* Invisible reCAPTCHA */}
       <div id="recaptcha-container"></div>
