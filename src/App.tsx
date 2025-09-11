@@ -5,6 +5,7 @@ import SalonDetail from "./pages/SalonDetailPage";
 import Login from "./pages/LoginPage";
 import Booking from "./pages/BookingPage";
 import MyBookingsPage from "./pages/BookingPage.tsx";// 👈 import it
+import NewSalonPage from "./pages/NewSalonPage";
 import AuthGuard from "./components/AuthGuard";
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Home />} />
           <Route path="/salons/:id" element={<SalonDetail />} />
+          <Route path="/new-salon" element={<NewSalonPage />} />
           <Route
             path="/book/:salonId"
             element={
