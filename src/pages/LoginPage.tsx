@@ -1,6 +1,7 @@
 // src/pages/LoginPage.tsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { auth, sendOTP, verifyOTP, setupRecaptcha } from "../services/auth";
 
 const LoginPage: React.FC = () => {
@@ -13,7 +14,6 @@ const LoginPage: React.FC = () => {
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
 
   useEffect(() => {
-    // reCAPTCHA setup on mount
     setupRecaptcha("recaptcha-container");
   }, []);
 
@@ -28,7 +28,7 @@ const LoginPage: React.FC = () => {
       setOtpSent(true);
     } catch (err) {
       console.error(err);
-      setError("Failed to send OTP. Please check your phone number.");
+      setError("❌ Failed to send OTP. Please check your phone number.");
     } finally {
       setLoading(false);
     }
@@ -42,103 +42,91 @@ const LoginPage: React.FC = () => {
     try {
       await verifyOTP(confirmationResult, otp);
 
-      // Get Firebase user
       const user = auth.currentUser;
       if (user) {
         const idToken = await user.getIdToken();
-
-        // Store for AuthGuard
         localStorage.setItem("authToken", idToken);
         localStorage.setItem(
           "user",
-          JSON.stringify({
-            uid: user.uid,
-            phoneNumber: user.phoneNumber,
-          })
+          JSON.stringify({ uid: user.uid, phoneNumber: user.phoneNumber })
         );
-
-        navigate("/"); // Redirect after login
+        navigate("/");
       } else {
         setError("Login failed. No user found.");
       }
     } catch (err) {
       console.error(err);
-      setError("Invalid OTP. Please try again.");
+      setError("❌ Invalid OTP. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm mx-4">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
-          Login with Phone
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-100 via-white to-green-50">
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8"
+      >
+        <h2 className="text-2xl font-bold text-center text-deep-green mb-6">
+          {otpSent ? "Enter OTP 🔑" : "Login with Phone 📱"}
         </h2>
 
         {!otpSent ? (
-          // Phone input form
-          <form onSubmit={handleSendOtp}>
-            <div className="mb-4">
-              <label
-                htmlFor="phone"
-                className="block text-gray-700 font-medium"
-              >
+          <form onSubmit={handleSendOtp} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
                 Phone Number
               </label>
               <input
                 type="tel"
-                id="phone"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                className="mt-1 w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-deep-green"
                 placeholder="+919876543210"
                 required
               />
             </div>
-            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+            {error && <p className="text-red-500 text-sm">{error}</p>}
             <button
               type="submit"
-              className="w-full bg-indigo-600 text-white py-2 rounded-md font-semibold hover:bg-opacity-90 transition-colors"
+              className="w-full bg-deep-green text-white py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-all"
               disabled={loading}
             >
               {loading ? "Sending OTP..." : "Send OTP"}
             </button>
           </form>
         ) : (
-          // OTP form
-          <form onSubmit={handleVerifyOtp}>
-            <div className="mb-4">
-              <label
-                htmlFor="otp"
-                className="block text-gray-700 font-medium"
-              >
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
                 Enter OTP
               </label>
               <input
                 type="text"
-                id="otp"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm text-center tracking-widest focus:ring-indigo-500 focus:border-indigo-500"
+                className="mt-1 w-full border border-gray-300 rounded-lg p-3 text-center tracking-widest focus:ring-2 focus:ring-deep-green"
                 placeholder="••••••"
-                required
                 maxLength={6}
+                required
               />
             </div>
-            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+            {error && <p className="text-red-500 text-sm">{error}</p>}
             <button
               type="submit"
-              className="w-full bg-indigo-600 text-white py-2 rounded-md font-semibold hover:bg-opacity-90 transition-colors"
+              className="w-full bg-deep-green text-white py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-all"
               disabled={loading}
             >
               {loading ? "Verifying..." : "Verify & Login"}
             </button>
           </form>
         )}
-      </div>
+      </motion.div>
 
-      {/* Invisible recaptcha */}
+      {/* Invisible reCAPTCHA */}
       <div id="recaptcha-container"></div>
     </div>
   );
