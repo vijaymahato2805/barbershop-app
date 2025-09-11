@@ -1,50 +1,66 @@
 // src/pages/HomePage.tsx
-import React, { useState, useEffect } from 'react';
-import SalonList from '../components/SalonList';
-import MapView from '../components/MapView';
-import SearchBar from '../components/SearchBar';
-import { getNearbySalons } from '../services/api';
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { fetchSalons } from "../services/api";
 
 const HomePage: React.FC = () => {
-  const [salons, setSalons] = useState([]);
+  const [salons, setSalons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'list' | 'map'>('list');
 
   useEffect(() => {
-    // Fetch nearby salons from API or dummy data
-    const fetchSalons = async () => {
-      setLoading(true);
-      const data = await getNearbySalons(); // Mock API call
-      setSalons(data);
-      setLoading(false);
+    const loadSalons = async () => {
+      try {
+        const data = await fetchSalons();
+        setSalons(data);
+      } catch (error) {
+        console.error("Error loading salons:", error);
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchSalons();
+
+    loadSalons();
   }, []);
 
+  if (loading) {
+    return <p className="p-6 text-gray-500">Loading salons...</p>;
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <SearchBar />
-      <div className="flex justify-center my-4 space-x-2">
-        <button
-          onClick={() => setView('list')}
-          className={`p-2 rounded ${view === 'list' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-800'}`}
-        >
-          List View
-        </button>
-        <button
-          onClick={() => setView('map')}
-          className={`p-2 rounded ${view === 'map' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-800'}`}
-        >
-          Map View
-        </button>
-      </div>
-      {loading ? (
-        <p className="text-center text-gray-500">Loading salons...</p>
+    <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
+      <h1 className="text-2xl font-bold mb-6">Nearby Salons</h1>
+
+      {salons.length === 0 ? (
+        <p className="text-gray-500">No salons available.</p>
       ) : (
-        <>
-          {view === 'list' && <SalonList salons={salons} />}
-          {view === 'map' && <MapView salons={salons} />}
-        </>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {salons.map((salon) => (
+            <div
+              key={salon.id}
+              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+            >
+              <img
+                src={salon.image_url || "https://via.placeholder.com/400x250"}
+                alt={salon.name}
+                className="w-full h-48 object-cover"
+              />
+              <div className="p-4">
+                <h2 className="text-lg font-semibold">{salon.name}</h2>
+                <p className="text-sm text-gray-600 mb-2">{salon.address}</p>
+                <p className="text-yellow-600 font-medium">
+                  ⭐ {salon.rating || "N/A"} ({salon.reviews || 0} reviews)
+                </p>
+
+                <Link
+                  to={`/booking/${salon.id}`}
+                  className="mt-4 inline-block w-full bg-deep-green text-white text-center py-2 px-4 rounded-md hover:bg-opacity-90 transition-colors"
+                >
+                  Book Now
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
